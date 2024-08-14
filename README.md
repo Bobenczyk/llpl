@@ -1,5 +1,9 @@
 # llpl (lisp like programing language)
 
+## Running Programs
+to run llpl files use commmand: \
+```lua src\main.lua {file}``` \
+but replace "{file}" with relative path to your llpl file.
 
 ## Main Idea
 llpl is a stack based language. \
