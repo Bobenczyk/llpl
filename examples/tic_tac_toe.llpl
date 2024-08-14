@@ -1,0 +1,11 @@
+(set 1 (list o o #))
+(set 2 (list # o #))
+(set 3 (list o # #))
+
+(print
+    (concat (list
+        (concat (get 1) (get space))
+        (concat (get 2) (get space))
+        (concat (get 3) (get space))
+    ) (get newline))
+)
