@@ -57,6 +57,6 @@ More examples can be found in examples directory.
 print(concat(list:thumbsup:))) /// turning in to a list to concat without spaces
 ```
 
-### Some Less Inportant Info
+## Some Less Inportant Info
  - state of pl: uncompleate prototype
  - started this project: 11.08.24 (DD/MM/YY) 21:15
