@@ -70,7 +70,7 @@ blah blah blah
 yes sir
 :thumbsup:
 ```
-btw (i dont use arch 😎, am i cool mom?)
+btw (i dont use arch 😎, mom am i cool?)
 
 ## Some Later (aka Post-First-Release 😎) Ideas 💻
  - **Exceptions** (maybe yeah or nah. idk yet but seems like cool idea 😎)
