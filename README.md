@@ -1,8 +1,9 @@
 # llpl (lisp like programing language) (not) another lisp clone 😠
 ### i promise its different plss stay 😃
-##### (i haven't writen a line of proper lisp) 😎
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(i haven't writen a line of proper lisp) 😎
 
 ## Running Programs 😎
+#### &nbsp;&nbsp;&nbsp;i am using lua 5.4.2 🔥🔥🔥
 to run **llpl** files use commmand: \
 ```lua src\main.lua {file}``` \
 but replace "**{file}**" with relative path to your **llpl file**. 😎
@@ -13,7 +14,7 @@ Where **any token** ```(but not thease: ( ) [ ] { } for now)``` is **pushed on t
 #### Also I need to say one more thing llpl doesn't have grammar. So you can do things like that: ```print  ( [ ) ]  )``` but it can cause unexpected behaviour. 😠
 
 ## Some Examples
-More **examples** can be found in examples directory. 👍
+&nbsp;&nbsp;&nbsp;&nbsp;More **examples** can be found in examples directory. 👍
 ```
 /// this is a comment
 /// <- is used because // operator is already used as floor division
@@ -137,7 +138,7 @@ number, number, number
 btw (i dont use arch 😎, mom am i cool?)
 
 ## Some Later (aka Post-First-Release 😎) Ideas 💻
- - **Exceptions** (maybe yeah or nah. idk yet but seems like cool idea 😎)
+ - **Exceptions** 🔥🔥🔥 (maybe yeah or nah. idk yet but seems like cool idea 😎)
 
 ## Some Less Inportant Info 👀
  - **state of pl**: **uncompleate prototype** 😦
