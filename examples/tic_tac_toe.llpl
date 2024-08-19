@@ -4,8 +4,8 @@
 
 (print
     (concat (list
-        (concat (get 1) (get space))
-        (concat (get 2) (get space))
-        (concat (get 3) (get space))
-    ) (get newline))
+        (concat (get 1) (get SPACE))
+        (concat (get 2) (get SPACE))
+        (concat (get 3) (get SPACE))
+    ) (get NEWLINE))
 )
