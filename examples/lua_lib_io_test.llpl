@@ -1,0 +1,60 @@
+/// lualib:
+///   io:
+///     VARS:
+///       lua_io_stdin
+///       lua_io_stdout
+///       lua_io_stderr
+///     FUNCS:
+///       lua_io_open  (filename, mode)
+///       lua_io_close (File)
+///       lua_io_read  (File)
+///       lua_io_write (File, string)
+
+
+
+/// code ///
+
+(set filename 
+    (concat [ test.txt ])
+)
+
+/// writing
+
+(set file (lua_io_open (get filename) w))
+(set toWrite
+    (concat [
+        (concat [
+            pinker
+            finger
+            kider
+            hinder
+            finder
+            shinder
+            quinder
+        ] (get NEWLINE))
+        (concat [0 1 2 3 4 5 6 7 8 9] (get SPACE))
+    ] (get NEWLINE))
+)
+
+(lua_io_write (get file) (get toWrite))
+(lua_io_close (get file))
+
+
+/// reading
+
+(set file (lua_io_open (get filename) r))
+(set toPrint
+    (lua_io_read (get file))
+)
+(lua_io_close (get file))
+
+(print
+    (concat [
+        (concat [(get filename) - File (concat (list Contents :))] (get SPACE))
+        (concat [
+            "
+            (get toPrint)
+            "
+        ])
+    ] (get NEWLINE))
+)

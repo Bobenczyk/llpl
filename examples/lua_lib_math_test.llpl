@@ -1,0 +1,42 @@
+/// lualib:
+///   math:
+///     VARS:
+///       lua_math_huge
+///       lua_math_pi
+///       lua_math_maxint
+///       lua_math_minint
+///     FUNCS:
+///       lua_math_sin   (x)
+///       lua_math_cos   (x)
+///       lua_math_tan   (x)
+///       lua_math_round (x)
+///       lua_math_floor (x)
+///       lua_math_ceil  (x)
+///       lua_math_abs   (x)
+///       lua_math_fmod  (x, y)
+///       lua_math_max   (x, ...)
+///       lua_math_min   (x, ...)
+
+
+
+(set x [23 10 /])
+(set y 3)
+
+
+(print lua_math_huge (get lua_math_huge))
+(print lua_math_pi (get lua_math_pi))
+(print lua_math_maxint (get lua_math_maxint))
+(print lua_math_minint (get lua_math_minint))
+
+(print lua_math_sin (lua_math_sin (get x)))
+(print lua_math_cos (lua_math_cos (get x)))
+(print lua_math_tan (lua_math_tan (get x)))
+(print lua_math_round (lua_math_round (get x)))
+(print lua_math_floor (lua_math_floor (get x)))
+(print lua_math_ceil (lua_math_ceil (get x)))
+(print lua_math_abs (lua_math_abs (get x)))
+
+(print lua_math_fmod (lua_math_fmod (get x) (get y)))
+
+(print lua_math_max (lua_math_max (get x) (get y)))
+(print lua_math_min (lua_math_min (get x) (get y)))

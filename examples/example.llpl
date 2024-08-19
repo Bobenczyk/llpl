@@ -33,11 +33,13 @@
 
             /// This wouldn't be some another random lisp copy without lists
             /// lists can be crated in 2 ways:
-(concat             [ blah blah blah ]          (get space) )     /// with square brackets (why are you reading this you can see for yourself)
-(concat             ( list yes sir )            (get space) )     /// and a classical lisp clone approach
+(concat             [ blah blah blah ]          (get SPACE) )     /// with square brackets (why are you reading this you can see for yourself)
+(concat             ( list yes sir )            (get SPACE) )     /// and a classical lisp clone approach
 
 
-] (get newline) ))               /// "newline" and "space" vars speak for themself but BIG NOTE: they will be only until I am not to lazy and implement strings YESSIRRRrr :\/
+] (get NEWLINE) ))         /// "NEWLINE" and "SPACE" vars speak for themself
+                           /// but BIG NOTE: they will be only until I am not lazy and implement strings YESSIRRRrr :\/
+                           /// instead of writing this
 
 
 /// ure smart if u understood me

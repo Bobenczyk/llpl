@@ -4,48 +4,57 @@ local ___f = {___r:find(".+[/\\]")}
 Path = (___f[1] and ___r:sub(___f[2]):reverse()) or ""
 
 
-if #arg < 1 then   os.exit()   end
-if #arg > 1 then   print("provided unneeded comand line input: \"".. table.concat(arg, ' ', 2) ..'"')   end
+-- checking if there are more then 0 command line args
+if #arg < 1 then   print("llpl: no file provided!") os.exit()   end
+-- if #arg > 1 then   print("provided unneeded comand line input: \"".. table.concat(arg, ' ', 2) ..'"')   end
 
+-- reading input file
 local file = io.open(arg[1], "r")
 if not file then   os.exit()   end
 
+-- writing file contents to code var
 local code = file:read("a")
 file:close()
 
 
+-- enum of different token types
 tok = {
     number = "number",
     operator = "operator",
     name = "name",
-    -- string = "string",        -- not implemented
+    -- string = "string",        -- not implemented (yet i promise i will implement strings)
 
     unknown = "unknown",
 }
 
+-- list of different operators
 operators = {
-    '!', '@', '#', '$', '%', '^', '&', "&&", '*', '(', ')', '-', "--", '+', "++", '=',
-    '{', '}', '[', ']',
+    '!', '@', '#', '$', '%', '^', '&', "&&", '*', '-', "--", '+', "++", '=',
     ':', ';', '|', "||", '\\',
     '<', '>', ',', '.', '?', '/', "//",
-
+    
     "<<", ">>",
     "<=", ">=", "!=", "==",
     "-=", "+=", "/=", "*=",
-
+    
     "..", "..=",
+    
+    '(', ')',
+    '[', ']',
+    '{', '}',
 }
 
 
 
-
+-- lexer output
 local tokens = {}
 
 function token(type, value)   table.insert(tokens, { type = type, value = value })   end
 
-
+-- word buffer and its type
 local buf, bufType = "", ""
 
+-- some lexer helper funcs
 function isWhiteSpace(c)   return ( c == ' ' or c == '\n' or c == '\t' )   end
 function isDigit(c)   local a = string.byte(c, 1, 1)   return ( a >= 48 and a <= 57 )   end
 
@@ -67,11 +76,18 @@ function isName(str)
     return true   end
 function isOperator(str)   return #{(table.concat(operators, ' ')..' '):find(str..' ', nil, true)} > 0   end
 
+-- analize function (used to detemit bufType and finally token type)
 function analize(str)
     if string.len(str) > 0 then
             if tonumber(str)   then return tok.number
         elseif isOperator(str) then return tok.operator
         elseif isName(str)     then return tok.name
+        elseif
+            -- string.sub(str, 1, 1) == ';' or
+            string.sub(str, 1, 1) == ')' or
+            string.sub(str, 1, 1) == ']' or
+            string.sub(str, 1, 1) == '}'
+            then return tok.operator
         else return tok.unknown     -- a error case where there's a unrecogizable token type
         end
     end
@@ -95,8 +111,6 @@ while keepGoing do
     end
 end
 
--- io.open("no_comments_"..arg[1], "w"):write(code):close()
--- print("code:\n\""..code..'"')
 
 -- tokenizer --
 
@@ -104,6 +118,7 @@ local i = 0
 while i < string.len(code) do
     i = i + 1
     local c = string.sub(code, i, i)
+    -- if end of the word clean word buffer and its type indicator and apend token to list of tokens
     if isWhiteSpace(c) then
         if string.len(buf) > 0 then
             token(analize(buf), buf)
@@ -113,6 +128,7 @@ while i < string.len(code) do
         goto lexer_next
     end
     
+    -- some lexer logic
     if string.len(buf) == 0 then
         bufType = analize(c)
         buf = c
@@ -121,6 +137,10 @@ while i < string.len(code) do
         bufType == tok.operator and isOperator(buf..c) or
         bufType == tok.name and isName(buf..c) or
         (buf:sub(1, 1) == '-' or bufType == tok.number) and isDigit(c)
+        then
+        buf = buf .. c
+    elseif
+        (( buf:sub(1, 1) == ')' or buf:sub(1, 1) == ']' or buf:sub(1, 1) == '}' ) and c == ';')
         then
         buf = buf .. c
     else
@@ -136,53 +156,47 @@ while i < string.len(code) do
 end
 token(analize(buf), buf)
 
+local clock = os.clock() print(("---"):rep(14)..'\n'..("   "):rep(5).."vm time!\n"..("---"):rep(14)) local clocktok = os.clock()
+-- virtual machine
 
-
--- for i,tok in ipairs(tokens) do
-    -- print(i..": {type=\""..tostring(tok.type).."\", value=\""..tostring(tok.value).."\"}")
--- end
-
-
--- local values = {}    for i,tok in ipairs(tokens) do  values[i] = tok.value  end    print(table.concat(values, "  "))
-
-
-
-
+-- vm config? vm info? idk
 vm = {}
 
+-- enum of vm inside types
 vm.types = {
     number = "number",
     operator = "operator",
     name = "name",
-    string = "string",           -- not implemented
+    string = "string",                                                                              -- not implemented (still no lexer support for strings. im lazy :) )
 
-    block = "block",             -- not implemented
-    list = "list",               -- not implemented
+    block = "block",             -- { v = tokenValues: table, t = tokenTypes: table }
+    list = "list",               -- { v = values: table, t = types: table, s? = size: number }
+
+    func = "func",               -- { p = plramList: table, b = block: vm.types.block }             -- not implemented (just still workin' on it)
 
     unknown = "unknown",
 }
 
 
-
+-- llpl glob vars
 local vars = {
-    space = ' ',
-    newline = '\n',
 }
+-- llpl glob var types
 local varTypes = {
-    space = vm.types.string,
-    newline = vm.types.string,
 }
 
 
-local stack = {}
-local typeStack = {}
+-- stack and its type representive
 
+stack = {}
+typeStack = {}
 
-local localSpaceEnterPosStack = {}         -- ()
+-- idk just really useful
+localSpaceEnterPosStack = {}         -- ()
 local operationSpaceEnterPosStack = {}     -- []
 local blockSpaceEnterPosStack = {}         -- {}
 
-
+-- stack manipulation funcs
 
 function push(vtype, value)
     if not (type(value) == "string" and value:len() == 0) then
@@ -200,6 +214,27 @@ function pushList(vtype, list)
         print("pushList function failed!\n  (\""..tostring(list).."\": \""..tostring(vtype).."\")")
     end
 end
+function pushBlock(block)
+    if type(block) == "table" and block.t and block.v then
+        table.insert(stack, block)
+        table.insert(typeStack, vm.types.block)
+    else
+        print("pushBlock function failed!\n  (\""..tostring(block).."\": \""..tostring(vm.types.block).."\")")
+    end
+end
+function pushFunc(block, paramList)
+    if
+        (type(block) == "table" and block.t and block.v) and
+        (type(paramList) == "table")
+        then
+        table.insert(stack, {p = paramList, b = block})
+        table.insert(typeStack, vm.types.func)
+    else
+        print("pushFunc function failed!\n  (\""..tostring(block).."\": \""..tostring(vm.types.block).."\")\n  (\""..tostring(paramList).."\": \"lua table? idk\")")
+    end
+end
+---@return any value
+---@return any type
 function pop()
     return table.remove(stack), table.remove(typeStack)
 end
@@ -211,29 +246,31 @@ function swap()
     push(st, sv)
 end
 
+-- additional stacks funcs
 
+-- ()
 function goInLocalSpace()
     table.insert(localSpaceEnterPosStack, #stack)
 end
 function goOutLocalSpace()
     table.remove(localSpaceEnterPosStack)
 end
-
+-- []
 function goInOperSpace()
     table.insert(operationSpaceEnterPosStack, #stack)
 end
 function goOutOperSpace()
     table.remove(operationSpaceEnterPosStack)
 end
-
-function goInBlockSpace()
-    table.insert(blockSpaceEnterPosStack, #stack)
+-- {}
+function goInBlockSpace(tokPos)
+    table.insert(blockSpaceEnterPosStack, tokPos)
 end
 function goOutBlockSpace()
-    table.remove(blockSpaceEnterPosStack)
+    return ( table.remove(blockSpaceEnterPosStack) or 0 )
 end
 
-
+-- idk just look at name
 function toBin(vtype, value)
     if vtype == vm.types.number then
         local a = tostring(value)
@@ -245,11 +282,13 @@ function toBin(vtype, value)
 end
 
 
--- IDEA: exeptions
+-- IDEA: EXCEPTIONS  :thumbsup:
 
+-- llpl funcs
 luaOperations = {}
 luaFunctions = {}
 
+-- ops
 local operations = {}
 luaOperations = {
     ["+"] = function(argc)                  -- plus
@@ -342,6 +381,7 @@ luaOperations = {
 
 }
 
+-- funcs
 local functions = {}
 luaFunctions = {
     set = function(argc)                    -- set global var
@@ -468,7 +508,7 @@ luaFunctions = {
         pop()
         print(string.sub(str, 2))
     end,
-    
+
     list = function(argc)                   -- original list function
         local a, at = {}, {}
         for _ = 1, argc do
@@ -499,37 +539,52 @@ luaFunctions = {
     end,
 
     concat = function(argc)
-        for _ = 1, argc-2 do pop() end
-        local spacer = ""
-        if argc == 2 then spacer = pop() end
-        local list = pop()
-        local str = ""
-        for _, v in ipairs(list.v) do
-            str = str .. spacer .. v
+        if argc >= 1 then
+            for _ = 1, argc-2 do pop() end
+            local spacer = ""
+            if argc >= 2 then spacer = pop() end
+            local list, at = {}, nil
+            if argc >= 1 then list, at = pop() end
+            if at == vm.types.list then
+                local str = ""
+                for _, v in ipairs(list.v) do
+                    str = str .. spacer .. v
+                end
+                pop()
+                str = string.sub(str, string.len(spacer)+1 )
+                push(vm.types.string, str)
+            else
+                pop()
+            end
+        else
+            pop()
+        end
+    end,
+
+    ["do"] = function(argc)
+        local blocks = {}
+        for i = 1, argc do
+            local a, at = pop()
+            if at == vm.types.block then
+                blocks[i] = a
+            end
         end
         pop()
-        str = string.sub(str, string.len(spacer)+1 )
-        push(vm.types.string, str)
+        for i = 1, #blocks do
+            local j = #blocks-i+1
+            -- print(j, blocks[j], (blocks[j].v) and #blocks[j].v or 0)   print(table.concat(blocks[j].v, ' '))
+            vm_(blocks[j])
+        end
     end,
+
+    -- if, while, for, 
 }
 
 
-function a(i)
-    if #localSpaceEnterPosStack > 1 and localSpaceEnterPosStack[#localSpaceEnterPosStack]+1 > 0 then
-        print(' S'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(stack, ' ', localSpaceEnterPosStack[#localSpaceEnterPosStack-1]+1, localSpaceEnterPosStack[#localSpaceEnterPosStack-1]+1))
-    elseif localSpaceEnterPosStack[#localSpaceEnterPosStack] and localSpaceEnterPosStack[#localSpaceEnterPosStack]+1 > 0 then
-        print(' S'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(stack, ' ', localSpaceEnterPosStack[#localSpaceEnterPosStack]+1))
-    else
-        print(' S'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(stack, ' '))
-    end
-    print('eS'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(stack, ' '))
-    print('lS'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(localSpaceEnterPosStack, ' '))
-    print('cS'..(" "):rep(#localSpaceEnterPosStack*2-1).. table.concat(operationSpaceEnterPosStack, ' '))
-    print(" ^ "..i..'\n')
-end
-
-
-if false then                    -- toglle if to pack lua arg to llpl (pl name)
+-- support for args (converted to llpl list and shiped to vm) :smile:
+if
+false
+then                    -- toglle if to pack lua arg to llpl (pl name)
     local args_list = { s = #arg-1, t={}, v={} }
     for i = 2, #arg do
         args_list.t[i-1] = vm.types.string
@@ -539,135 +594,238 @@ if false then                    -- toglle if to pack lua arg to llpl (pl name)
     vars["args"] = args_list
 end
 
+-- ohh heres the big boi :smiley:
+function vm_(block)
+    local block_checking = 0
+    local i = 0
+    while i < #block.v do
+        i = i + 1
+        local type, value = block.t[i], block.v[i]
+        -- print(value, type, block_checking)
+        if not type then goto vm_next end
 
-local i = 0
-while i < #tokens do
-    i = i + 1
-    local token = tokens[i]
-    local type, value = token.type, token.value
+        if type == tok.operator then
 
-    if type == tok.operator then
+            if block_checking == 0 then
 
-        if value == '(' then
-            goInLocalSpace()
-            -- a(i)
-        elseif value == ')' then
-            -- a(i)
-            local begin = localSpaceEnterPosStack[#localSpaceEnterPosStack] or 0
-            local argc = #stack - begin       -- end - begin = difference
+                if value == '(' then
+                    goInLocalSpace()
+                    -- a(i)
+                elseif value == ')' then
+                    -- a(i)
+                    local begin = localSpaceEnterPosStack[#localSpaceEnterPosStack] or 0
+                    local argc = #stack - begin       -- end - begin = difference
 
-            -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
+                    -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
 
-            if argc > 0 then
+                    if argc > 0 then
 
-                if typeStack[begin+1] == vm.types.name then
-                    local funcName = stack[begin+1]
-                    if luaFunctions[funcName] then
-                        -- print(funcName, argc-1)
-                        luaFunctions[funcName](argc-1)
-                    else
-                        print("error: lua funcion \""..funcName.."\" was not found!")
+                        if typeStack[begin+1] == vm.types.name then
+                            local funcName = stack[begin+1]
+                            if luaFunctions[funcName] then
+                                -- print(funcName, argc-1)
+                                luaFunctions[funcName](argc-1)
+                            else
+                                print("error: lua funcion \""..funcName.."\" was not found!")
+                            end
+
+                        -- else
+                        --     local a, at = {}, {}
+                        --     for _ = 1, argc do
+                        --         local b, bt = pop()
+                        --         table.insert(a, 1, b)
+                        --         table.insert(at, 1, bt)
+                        --     end
+                        --     pushList(vm.types.list, { s = argc, v = a, t = at })
+                        
+                        -- (nwm co z tym zrobic btw)
+
+                        end
                     end
 
-                -- else
-                --     local a, at = {}, {}
-                --     for _ = 1, argc do
-                --         local b, bt = pop()
-                --         table.insert(a, 1, b)
-                --         table.insert(at, 1, bt)
-                --     end
-                --     pushList(vm.types.list, { s = argc, v = a, t = at })
-                
-                -- (nwm co z tym zrobic btw)
+                    goOutLocalSpace()
+                -- elseif value == ");" then
+                --     goOutLocalSpace()
 
-                end
-            end
+                elseif value == '[' then
+                    goInOperSpace()
+                    -- a(i)
+                elseif value == ']' then
+                    -- a(i)
+                    local begin = operationSpaceEnterPosStack[#operationSpaceEnterPosStack] or 0
+                    local argc = #stack - begin       -- end - begin = difference
 
-            goOutLocalSpace()
+                    -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
 
-        elseif value == '[' then
-            goInOperSpace()
-            -- a(i)
-        elseif value == ']' then
-            -- a(i)
-            local begin = operationSpaceEnterPosStack[#operationSpaceEnterPosStack] or 0
-            local argc = #stack - begin       -- end - begin = difference
+                    if argc > 0 then
 
-            -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
-
-            if argc > 0 then
-
-                if typeStack[#typeStack] == vm.types.operator then
-                    local oper = stack[#stack]
-                    pop()
-                    if luaOperations[oper] then
-                        -- print(oper, argc-1)
-                        luaOperations[oper](argc-1)
+                        if typeStack[#typeStack] == vm.types.operator then
+                            local oper = stack[#stack]
+                            pop()
+                            if luaOperations[oper] then
+                                -- print(oper, argc-1)
+                                luaOperations[oper](argc-1)
+                            else
+                                print("error: lua operation \""..oper.."\" was not found!")
+                            end
+                        else
+                            local a, at = {}, {}
+                            for _ = 1, argc do
+                                local b, bt = pop()
+                                table.insert(a, 1, b)
+                                table.insert(at, 1, bt)
+                            end
+                            pushList(vm.types.list, { s = argc, v = a, t = at })
+                        end
                     else
-                        print("error: lua operation \""..oper.."\" was not found!")
+                        --     coped from above ^^^
+                        local a, at = {}, {}
+                        for _ = 1, argc do
+                            local b, bt = pop()
+                            table.insert(a, 1, b)
+                            table.insert(at, 1, bt)
+                        end
+                        pushList(vm.types.list, { s = argc, v = a, t = at })
                     end
+
+                    goOutOperSpace()
+
+                elseif value == '{' then
+                    -- print("0.{:", block_checking, #blockSpaceEnterPosStack)
+                    block_checking = block_checking + 1
+                    goInBlockSpace(i)
+                elseif value == '}' then
+                    -- print("0.}:", block_checking, #blockSpaceEnterPosStack)
+                    block_checking = math.max(block_checking - 1, 0)
+                    local toks, tokTypes = {}, {}
+                    for j = 1, i-1 do
+                        local token = tokens[j]
+                        table.insert(toks, token.value)
+                        table.insert(tokTypes, token.type)
+                    end
+                    pushBlock({t = tokTypes, v = toks})
+
                 else
-                    local a, at = {}, {}
-                    for _ = 1, argc do
-                        local b, bt = pop()
-                        table.insert(a, 1, b)
-                        table.insert(at, 1, bt)
+                    push(type, value)
+                end
+
+            else -- #blockSpaceEnterPosStack > 0
+
+                if value == '{' then
+                    -- print("1.{:", block_checking, #blockSpaceEnterPosStack)
+                    block_checking = block_checking + 1
+                elseif value == '}' then
+                    -- print("1.}:", block_checking, #blockSpaceEnterPosStack)
+                    block_checking = math.max(block_checking - 1, 0)
+                    if block_checking+1 <= #blockSpaceEnterPosStack then
+                        local blockOpenTokPos = goOutBlockSpace()
+                        local toks, tokTypes = {}, {}
+                        for j = blockOpenTokPos+1, i-1 do
+                            local token = tokens[j]
+                            table.insert(toks, token.value)
+                            table.insert(tokTypes, token.type)
+                        end
+                        pushBlock({t = tokTypes, v = toks})
                     end
-                    pushList(vm.types.list, { s = argc, v = a, t = at })
+
                 end
-            else
-                --     coped from above ^^^
-                local a, at = {}, {}
-                for _ = 1, argc do
-                    local b, bt = pop()
-                    table.insert(a, 1, b)
-                    table.insert(at, 1, bt)
-                end
-                pushList(vm.types.list, { s = argc, v = a, t = at })
+
             end
-
-            goOutOperSpace()
-
-        elseif value == '{' then
-            goInBlockSpace()
-            -- a(i)
-        elseif value == '}' then
-            -- a(i)
-            pushList(vm.types.block, {t = {}, v = {}})
-            goOutBlockSpace()
 
         else
-            push(type, value)
+            if block_checking == 0 then
+                push(type, value)
+            end
         end
-
-    else
-        push(type, value)
+        :: vm_next ::
     end
 end
 
 
-function printList(list, indent)
-    print("  size: "..tostring(list.s or "unknown"))
-    for j = 1, (list.s or math.max(#list.v, #list.t)) do
-        print(indent..j..": \""..tostring(list.v[j]).."\": \""..tostring(list.t[j]).."\"")
-        if list.t[j] == vm.types.list then
-            printList(list.v[j], indent.."  ")
+-- helper funcs
+function apendVar(name, val, type)
+    vars[name] = val
+    varTypes[name] = type
+end
+
+-- space, newline
+apendVar("SPACE", ' ', vm.types.string)
+apendVar("NEWLINE", '\n', vm.types.string)
+
+-- llpl lua lib bind YESSIRRrrr :) 
+dofile("src/lualib.lua")
+
+
+
+-- tokens -> llpl block
+-- vm_ entry point Yessir
+local toks, tokTypes = {}, {}
+for i, tok in ipairs(tokens) do
+    toks[i] = tok.value
+    tokTypes[i] = tok.type
+end
+xpcall(
+    vm_,
+    function(msg)
+        print("lua: "..msg)
+    end,
+    { v = toks, t = tokTypes }
+)
+
+local clockvm = os.clock()
+
+
+-- Debug
+local llplDebugFlag = true
+
+if llplDebugFlag then
+    -- debug start
+    function printBlock(block, indent)
+        print(indent.."size: "..tostring(block.s or math.max(#block.v, #block.t)))
+        -- for j = 1, (block.s or math.max(#block.v, #block.t)) do
+            print(table.concat(block.v, ' '))
+            -- if block.t[j] == vm.types.block then
+            --     printBlock(block.v[j], indent.."  ")
+            -- end
+        -- end
+    end
+
+    function printList(list, indent)
+        print(indent.."size: "..tostring(list.s or "unknown"))
+        for j = 1, (list.s or math.max(#list.v, #list.t)) do
+            print(indent..j..": \""..tostring(list.v[j]).."\": \""..tostring(list.t[j]).."\"")
+            if list.t[j] == vm.types.list then
+                printList(list.v[j], indent.."  ")
+            elseif list.t[j] == vm.types.block then
+                printBlock(list.v[j], indent.."  ")
+            end
         end
     end
+
+
+    print("\nvars (+ types):")
+    for k, v in pairs(vars) do
+        print('"'..k.."\" = \""..tostring(v).."\": \""..tostring(varTypes[k]).."\"")
+        if varTypes[k] == vm.types.list then
+            printList(v, "  ")
+        elseif varTypes[k] == vm.types.block then
+            printBlock(v, "  ")
+        end
+    end
+
+    print("\nstack (+ types):")
+    for i = 1, math.max(#stack, #typeStack) do
+        print(i..": \""..tostring(stack[i]).."\": \""..tostring(typeStack[i]).."\"")
+        if typeStack[i] == vm.types.list then
+            printList(stack[i], "  ")
+        elseif typeStack[i] == vm.types.block then
+            printBlock(stack[i], "  ")
+        end
+    end
+    -- debug end
 end
 
-print("\nvars (+ types):")
-for k, v in pairs(vars) do
-    print('"'..k.."\" = \""..tostring(v).."\": \""..tostring(varTypes[k]).."\"")
-    if varTypes[k] == vm.types.list then
-        printList(v, "  ")
-    end
-end
-
-print("\nstack (+ types):")
-for i = 1, math.max(#stack, #typeStack) do
-    print(i..": \""..tostring(stack[i]).."\": \""..tostring(typeStack[i]).."\"")
-    if typeStack[i] == vm.types.list then
-        printList(stack[i], "  ")
-    end
-end
+print()
+print("tok:", (clock*1000).."ms")
+print("info:", ((clocktok - clock)*1000).."ms")
+print("vm:", ((clockvm - clocktok)*1000).."ms")

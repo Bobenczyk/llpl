@@ -8,3 +8,20 @@
 /// ([math max .] 2 3) (pop 4) /// <- removes prevous atempt from stack
 /// equal to ^ (in lua)
 /// math.max(2, 3)
+
+
+/// {
+/// (list (list abc {);})
+/// }
+/// }
+
+
+(set a {
+    (print 1 2 3 = [1 2 3 +])
+})
+
+(printtype (get a))
+(do (get a))
+(do (get a))
+
+/// (print (concat (get args) (get space) ) )
