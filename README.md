@@ -41,7 +41,7 @@ More **examples** can be found in examples directory. 👍
 
 (pop) /// pops 1 value from stack (you can also do provide number)
 
-/// one note:
+/// ONE NOTE:
 ///     function "set" in future will be used for setting variables locally
 ///     but for setting vars globally "setg" will be used
 
@@ -59,6 +59,60 @@ More **examples** can be found in examples directory. 👍
                            /// instead of writing this
 
 
+/// blocks:
+/// NOTE: blocks work but still there's only one function (as for now) implementing some usebilyty
+/// it's "do" which accepts "infinite" paramiers
+/// (of any type but will trash any value other then of type block. goes throu provided blocks and evals them synchronously)
+
+
+/// pseudo functions: (there will be function "func" creating values of type function)
+
+/// pseudo func creation
+(set v3_add {
+    (set x2 [ (get x0) (get x1) + ])
+    (set y2 [ (get y0) (get y1) + ])
+    (set z2 [ (get z0) (get z1) + ])
+})
+
+
+/// setting params
+(set x0 (rand -10 10)) (set y0 (rand -10 10)) (set z0 (rand -10 10))
+(set x1 (rand -10 10)) (set y1 (rand -10 10)) (set z1 (rand -10 10))
+
+/// calling
+(do
+    (get
+        v3_add
+    )
+)
+
+
+/// print for debug
+(print)
+(print
+    (concat [
+        (concat (list
+            (concat (list (get x0) ,))
+            (concat (list (get y0) ,))
+            (get z0)
+            +
+        ) (get SPACE))
+        (concat (list
+            (concat (list (get x1) ,))
+            (concat (list (get y1) ,))
+            (get z1)
+            =
+        ) (get SPACE))
+        (concat [
+            (concat (list (get x2) ,))
+            (concat (list (get y2) ,))
+            (get z2)
+        ] (get SPACE))
+    ] (get NEWLINE))
+)
+(print)
+
+
 /// ure smart if u understood me
 print(concat(list:thumbsup:))) /// turning in to a list to concat without spaces
 ```
@@ -68,6 +122,16 @@ a b c
 6
 blah blah blah
 yes sir
+
+```
+this part is dynamic ('cuz it uses "rand" (aka random). not used here but also "randseed")
+```
+number, number, number +
+number, number, number =
+number, number, number
+```
+```
+
 :thumbsup:
 ```
 btw (i dont use arch 😎, mom am i cool?)

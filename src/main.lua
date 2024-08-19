@@ -156,7 +156,9 @@ while i < string.len(code) do
 end
 token(analize(buf), buf)
 
-local clock = os.clock() print(("---"):rep(14)..'\n'..("   "):rep(5).."vm time!\n"..("---"):rep(14)) local clocktok = os.clock()
+local clock = os.clock()
+-- print(("---"):rep(14)..'\n'..("   "):rep(5).."vm time!\n"..("---"):rep(14))
+local clocktok = os.clock()
 -- virtual machine
 
 -- vm config? vm info? idk
@@ -577,6 +579,36 @@ luaFunctions = {
         end
     end,
 
+    randseed = function(argc) for _ = 1, argc-1 do pop() end
+        local a, at
+        if argc == 1 then
+            a, at = pop()
+        end
+        pop()
+        if at ~= vm.types.number then
+            a = nil
+        end
+        math.randomseed(a)
+    end,
+
+    rand = function(argc) if argc >= 2 then   for _ = 1, argc-2 do pop() end
+        local a, at = pop()
+        local b, bt = pop()
+        pop()
+        if at == vm.types.number and bt == vm.types.number then
+            push(vm.types.number, math.random(b, a))
+        end
+    elseif argc == 1 then
+        local a, at = pop()
+        pop()
+        if at == vm.types.number then
+            push(vm.types.number, math.random(a))
+        end
+    else
+        pop()
+        push(vm.types.number, math.random())
+    end end,
+
     -- if, while, for, 
 }
 
@@ -825,7 +857,7 @@ if llplDebugFlag then
     -- debug end
 end
 
-print()
-print("tok:", (clock*1000).."ms")
-print("info:", ((clocktok - clock)*1000).."ms")
-print("vm:", ((clockvm - clocktok)*1000).."ms")
+print("\ntime:")
+print("  tok:", (clock*1000).."ms")
+-- print("  info:", ((clocktok - clock)*1000).."ms")
+print("  vm:", ((clockvm - clocktok)*1000).."ms")
