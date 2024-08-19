@@ -1,17 +1,19 @@
-# llpl (lisp like programing language)
+# llpl (lisp like programing language) (not) another lisp clone 😠
+### i promise its different plss stay 😃
+##### (i haven't writen a line of proper lisp) 😎
 
-## Running Programs
-to run llpl files use commmand: \
+## Running Programs 😎
+to run **llpl** files use commmand: \
 ```lua src\main.lua {file}``` \
-but replace "{file}" with relative path to your llpl file.
+but replace "**{file}**" with relative path to your **llpl file**. 😎
 
 ## Main Idea
-llpl is a stack based language. \
-Where any token ```(but not thease: ( ) [ ] { } for now)``` is pushed on the stack.
-#### Also I need to say one more thing llpl doesn't have grammar. So you can do things like that: ```print ( [ ) ] )``` but it can cause unexpected behaviour.
+llpl is a **stack based** language. 😠 \
+Where **any token** ```(but not thease: ( ) [ ] { } for now)``` is **pushed on the stack**. 😲
+#### Also I need to say one more thing llpl doesn't have grammar. So you can do things like that: ```print  ( [ ) ]  )``` but it can cause unexpected behaviour. 😠
 
 ## Some Examples
-More examples can be found in examples directory.
+More **examples** can be found in examples directory. 👍
 ```
 /// this is a comment
 /// <- is used because // operator is already used as floor division
@@ -48,11 +50,11 @@ More examples can be found in examples directory.
 
             /// This wouldn't be some another random lisp copy without lists
             /// lists can be crated in 2 ways:
-(concat             [ blah blah blah ]          (get space) )     /// with square brackets (why are you reading this you can see for yourself)
-(concat             ( list yes sir )            (get space) )     /// and a classical lisp clone approach
+(concat             [ blah blah blah ]          (get SPACE) )     /// with square brackets (why are you reading this you can see for yourself)
+(concat             ( list yes sir )            (get SPACE) )     /// and a classical lisp clone approach
 
 
-] (get newline) ))         /// "newline" and "space" vars speak for themself
+] (get NEWLINE) ))         /// "NEWLINE" and "SPACE" vars speak for themself
                            /// but BIG NOTE: they will be only until I am not lazy and implement strings YESSIRRRrr :\/
                            /// instead of writing this
 
@@ -60,7 +62,19 @@ More examples can be found in examples directory.
 /// ure smart if u understood me
 print(concat(list:thumbsup:))) /// turning in to a list to concat without spaces
 ```
+also this prints:
+```
+a b c
+6
+blah blah blah
+yes sir
+:thumbsup:
+```
+btw (i dont use arch 😎, am i cool mom?)
 
-## Some Less Inportant Info
- - state of pl: uncompleate prototype
- - started this project: 11.08.24 (DD/MM/YY) 21:15
+## Some Later (aka Post-First-Release 😎) Ideas 💻
+ - **Exceptions** (maybe yeah or nah. idk yet but seems like cool idea 😎)
+
+## Some Less Inportant Info 👀
+ - **state of pl**: **uncompleate prototype** 😦
+ - **started this project**: **11.08.24 (DD/MM/YY) 21:15** ✔️
