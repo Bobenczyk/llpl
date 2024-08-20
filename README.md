@@ -2,12 +2,6 @@
 ### i promise its different plss stay 😃
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(i haven't writen a line of proper lisp) 😎
 
-## Running Programs 😎
-#### &nbsp;&nbsp;&nbsp;i am using lua 5.4.2 🔥🔥🔥
-to run **llpl** files use commmand: \
-```lua src\llpl.lua {file}``` \
-but replace "**{file}**" with relative path to your **llpl file**. 😎
-
 ## Main Idea
 llpl is a **stack based** language. 😠 \
 Where **any token** ```(but not thease: ( ) [ ] { } for now)``` is **pushed on the stack**. 😲
@@ -136,6 +130,12 @@ number, number, number
 :thumbsup:
 ```
 btw (i dont use arch 😎, mom am i cool?)
+
+## Running Programs 😎
+#### &nbsp;&nbsp;&nbsp;i am using lua 5.4.2 🔥🔥🔥
+to run **llpl** files use commmand: \
+```lua src\llpl.lua {file}``` \
+but replace "**{file}**" with relative path to your **llpl file**. 😎
 
 ## What Am I Working On Now ✔️
  - **Adding more functionality to blocks in llpl** 😃 \
