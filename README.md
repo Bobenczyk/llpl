@@ -5,7 +5,7 @@
 ## Running Programs 😎
 #### &nbsp;&nbsp;&nbsp;i am using lua 5.4.2 🔥🔥🔥
 to run **llpl** files use commmand: \
-```lua src\main.lua {file}``` \
+```lua src\llpl.lua {file}``` \
 but replace "**{file}**" with relative path to your **llpl file**. 😎
 
 ## Main Idea
@@ -136,6 +136,11 @@ number, number, number
 :thumbsup:
 ```
 btw (i dont use arch 😎, mom am i cool?)
+
+## What Am I Working On Now ✔️
+ - **Adding more functionality to blocks in llpl** 😃 \
+    &nbsp;&nbsp;&nbsp;they are very limited (like only one function "do") 😠
+ - **Adding useful (or not) functions to llpl** 👍
 
 ## Some Later (aka Post-First-Release 😎) Ideas 💻
  - **Exceptions** 🔥🔥🔥 (maybe yeah or nah. idk yet but seems like cool idea 😎)
