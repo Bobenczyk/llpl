@@ -1,8 +1,5 @@
 -- get entry file directory path as global Path
-local ___r = string.reverse(arg[0])
-local ___f = {___r:find(".+[/\\]")}
-Path = (___f[1] and ___r:sub(___f[2]):reverse()) or ""
-
+Path = (arg[0]:match(".+[\\/]") or ""):sub(1, -2):match(".+[\\/]")
 
 -- checking if there are more then 0 command line args
 if #arg < 1 then   print("llpl: no file provided!") os.exit()   end
@@ -181,10 +178,10 @@ vm.types = {
 
 
 -- llpl glob vars
-local vars = {
+vars = {
 }
 -- llpl glob var types
-local varTypes = {
+varTypes = {
 }
 
 
@@ -195,8 +192,8 @@ typeStack = {}
 
 -- idk just really useful
 localSpaceEnterPosStack = {}         -- ()
-local operationSpaceEnterPosStack = {}     -- []
-local blockSpaceEnterPosStack = {}         -- {}
+operationSpaceEnterPosStack = {}     -- []
+blockSpaceEnterPosStack = {}         -- {}
 
 -- stack manipulation funcs
 
@@ -609,7 +606,7 @@ luaFunctions = {
         push(vm.types.number, math.random())
     end end,
 
-    -- if, while, for, 
+    -- if, while, for, fori
 }
 
 
@@ -785,7 +782,7 @@ apendVar("SPACE", ' ', vm.types.string)
 apendVar("NEWLINE", '\n', vm.types.string)
 
 -- llpl lua lib bind YESSIRRrrr :) 
-dofile("src/lualib.lua")
+dofile(Path.."src/lualib.lua")
 
 
 
@@ -799,7 +796,7 @@ end
 xpcall(
     vm_,
     function(msg)
-        print("lua: "..msg)
+        print("lua: "..tostring(msg))
     end,
     { v = toks, t = tokTypes }
 )
