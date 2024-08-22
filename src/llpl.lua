@@ -1,47 +1,19 @@
 -- get entry file directory path as global Path
-Path = (arg[0]:match(".+[\\/]") or ""):sub(1, -2):match(".+[\\/]")
+Path = (arg[0]:match(".+[\\/]") or ""):sub(1, -2):match(".+[\\/]") or ""
 
 -- checking if there are more then 0 command line args
 if #arg < 1 then   print("llpl: no file provided!") os.exit()   end
--- if #arg > 1 then   print("provided unneeded comand line input: \"".. table.concat(arg, ' ', 2) ..'"')   end
 
 -- reading input file
 local file = io.open(arg[1], "r")
-if not file then   os.exit()   end
+if not file then   print("llpl: error reading provided file!") os.exit()   end
 
 -- writing file contents to code var
 local code = file:read("a")
 file:close()
 
-
--- enum of different token types
-tok = {
-    number = "number",
-    operator = "operator",
-    name = "name",
-    -- string = "string",        -- not implemented (yet i promise i will implement strings)
-
-    unknown = "unknown",
-}
-
--- list of different operators
-operators = {
-    '!', '@', '#', '$', '%', '^', '&', "&&", '*', '-', "--", '+', "++", '=',
-    ':', ';', '|', "||", '\\',
-    '<', '>', ',', '.', '?', '/', "//",
-    
-    "<<", ">>",
-    "<=", ">=", "!=", "==",
-    "-=", "+=", "/=", "*=",
-    
-    "..", "..=",
-    
-    '(', ')',
-    '[', ']',
-    '{', '}',
-}
-
-
+dofile(Path.."src/lexer/tokens.lua")
+dofile(Path.."src/lexer/lexer.lua")
 
 -- lexer output
 local tokens = {}
@@ -85,7 +57,7 @@ function analize(str)
             string.sub(str, 1, 1) == ']' or
             string.sub(str, 1, 1) == '}'
             then return tok.operator
-        else return tok.unknown     -- a error case where there's a unrecogizable token type
+        else return tok.unknown     -- a error case where there's an unrecogizable token type
         end
     end
 end
@@ -129,7 +101,6 @@ while i < string.len(code) do
     if string.len(buf) == 0 then
         bufType = analize(c)
         buf = c
-        -- print("  IF", buf)
     elseif
         bufType == tok.operator and isOperator(buf..c) or
         bufType == tok.name and isName(buf..c) or
@@ -144,7 +115,6 @@ while i < string.len(code) do
         token(analize(buf), buf)
         bufType = analize(c)
         buf = c
-        -- print("  ELSE", buf)
     end
     
     -- print("buffer: \""..buf..'"')
@@ -156,25 +126,12 @@ token(analize(buf), buf)
 local clock = os.clock()
 -- print(("---"):rep(14)..'\n'..("   "):rep(5).."vm time!\n"..("---"):rep(14))
 local clocktok = os.clock()
--- virtual machine
+-- virtual machine --
 
 -- vm config? vm info? idk
 vm = {}
 
--- enum of vm inside types
-vm.types = {
-    number = "number",
-    operator = "operator",
-    name = "name",
-    string = "string",                                                                              -- not implemented (still no lexer support for strings. im lazy :) )
-
-    block = "block",             -- { v = tokenValues: table, t = tokenTypes: table }
-    list = "list",               -- { v = values: table, t = types: table, s? = size: number }
-
-    func = "func",               -- { p = plramList: table, b = block: vm.types.block }             -- not implemented (just still workin' on it)
-
-    unknown = "unknown",
-}
+dofile(Path.."src/vm/types.lua")
 
 
 -- llpl glob vars
@@ -185,435 +142,79 @@ varTypes = {
 }
 
 
--- stack and its type representive
+-- local vars? i think so
+vmStack = {}
 
-stack = {}
-typeStack = {}
+dofile(Path.."src/vm/stack.lua")
 
--- idk just really useful
-localSpaceEnterPosStack = {}         -- ()
-operationSpaceEnterPosStack = {}     -- []
-blockSpaceEnterPosStack = {}         -- {}
-
--- stack manipulation funcs
-
-function push(vtype, value)
-    if not (type(value) == "string" and value:len() == 0) then
-        table.insert(stack, value)
-        table.insert(typeStack, (vtype or ""))
-    else
-        print("push function failed!\n  (\""..tostring(value).."\": \""..tostring(vtype).."\")")
-    end
-end
-function pushList(vtype, list)
-    if type(list) == "table" and list.t and list.v then
-        table.insert(stack, list)
-        table.insert(typeStack, (vtype or ""))
-    else
-        print("pushList function failed!\n  (\""..tostring(list).."\": \""..tostring(vtype).."\")")
-    end
-end
-function pushBlock(block)
-    if type(block) == "table" and block.t and block.v then
-        table.insert(stack, block)
-        table.insert(typeStack, vm.types.block)
-    else
-        print("pushBlock function failed!\n  (\""..tostring(block).."\": \""..tostring(vm.types.block).."\")")
-    end
-end
-function pushFunc(block, paramList)
-    if
-        (type(block) == "table" and block.t and block.v) and
-        (type(paramList) == "table")
-        then
-        table.insert(stack, {p = paramList, b = block})
-        table.insert(typeStack, vm.types.func)
-    else
-        print("pushFunc function failed!\n  (\""..tostring(block).."\": \""..tostring(vm.types.block).."\")\n  (\""..tostring(paramList).."\": \"lua table? idk\")")
-    end
-end
----@return any value
----@return any type
-function pop()
-    return table.remove(stack), table.remove(typeStack)
-end
-function swap()
-    local fv, ft = pop()
-    local sv, st = pop()
-
-    push(ft, fv)
-    push(st, sv)
-end
-
--- additional stacks funcs
-
--- ()
-function goInLocalSpace()
-    table.insert(localSpaceEnterPosStack, #stack)
-end
-function goOutLocalSpace()
-    table.remove(localSpaceEnterPosStack)
-end
--- []
-function goInOperSpace()
-    table.insert(operationSpaceEnterPosStack, #stack)
-end
-function goOutOperSpace()
-    table.remove(operationSpaceEnterPosStack)
-end
--- {}
-function goInBlockSpace(tokPos)
-    table.insert(blockSpaceEnterPosStack, tokPos)
-end
-function goOutBlockSpace()
-    return ( table.remove(blockSpaceEnterPosStack) or 0 )
-end
 
 -- idk just look at name
 function toBin(vtype, value)
     if vtype == vm.types.number then
-        local a = tostring(value)
+        local a = tonumber(value)
         if a and a ~= 0 then
-            return vm.types.number, 0
+            return vm.types.number, 1
         end
     end
-    return vm.types.number, 1
+    return vm.types.number, 0
+end
+
+---@param n integer
+function mapStack(n)
+    local a, at = {}, {}
+    for _ = 1, n do
+        local b, bt = pop()
+        table.insert(a, b)
+        table.insert(at, bt)
+    end
+    return a, at
+end
+
+---@param a table<string>
+---@param at table<string>
+---@param f function<any, any, number>: any, any
+function unmapStack(a, at, f)
+    if f then
+        for i = 1, #a do
+            -- f(type, value): type, value
+            push(
+                f(
+                    table.remove(at),
+                    table.remove(a),
+                    i
+                )
+            )
+        end
+    else
+        for _ = 1, #a do
+            push(
+                table.remove(at),
+                table.remove(a)
+            )
+        end
+    end
 end
 
 
--- IDEA: EXCEPTIONS  :thumbsup:
+-- IDEA: EXCEPTIONS  :thumbsup: :fire::fire::fire: :100:
+dofile(Path.."src/debug.lua")
+
 
 -- llpl funcs
-luaOperations = {}
-luaFunctions = {}
+operations = {}
+functions = {}
 
 -- ops
-local operations = {}
-luaOperations = {
-    ["+"] = function(argc)                  -- plus
-        local sum = 0
-        for _ = 1, argc do
-            sum = sum + pop()
-        end
-
-        push(vm.types.number, tostring(sum))
-    end,
-    ["-"] = function(argc)                  -- minus
-        local sum = 0
-        if argc > 1 then
-            local a = {}
-            for _ = 1, argc do
-                local b, _ = pop()
-                table.insert(a, b)
-            end
-            sum = a[#a]
-            for i = argc-1, 1, -1 do
-                sum = sum - a[i]
-            end
-        elseif argc == 1 then
-            local a, _ = pop()
-            sum = -a
-        end
-
-        push(vm.types.number, tostring(sum))
-    end,
-
-    ["*"] = function(argc)                  -- multiply
-        local sum = pop()
-        for _ = 2, argc do
-            sum = sum * pop()
-        end
-
-        push(vm.types.number, tostring(sum))
-    end,
-    ["/"] = function(argc)                  -- divide
-        local sum = 0
-        if argc > 1 then
-            local a = {}
-            for _ = 1, argc do
-                local b, _ = pop()
-                table.insert(a, b)
-            end
-            sum = a[#a]
-            for i = argc-1, 1, -1 do
-                sum = sum / a[i]
-            end
-        elseif argc == 1 then
-            sum = pop()
-        end
-
-        push(vm.types.number, tostring(sum))
-    end,
-
-    ["//"] = function(argc)                 -- floor divide
-        local sum = 0
-        if argc > 1 then
-            local a = {}
-            for _ = 1, argc do
-                local b, _ = pop()
-                table.insert(a, b)
-            end
-            sum = a[#a]
-            for i = argc-1, 1, -1 do
-                sum = sum // a[i]
-            end
-        elseif argc == 1 then
-            sum = pop()
-        end
-
-        push(vm.types.number, tostring(sum))
-    end,
-
-
-    ["#"] = function(argc)                  -- lenght operator (gets lenght of: strings, lists, etc...)
-    end,
-
-    ["!"] = function(argc)                  -- bin not
-    end,
-    ["||"] = function(argc)                 -- bin or
-    end,
-    ["&&"] = function(argc)                 -- bin and
-    end,
-
-    ["=="] = function(argc)
-    end,
-
-}
+dofile("src/vm/ops.lua")
 
 -- funcs
-local functions = {}
-luaFunctions = {
-    set = function(argc)                    -- set global var
-        if argc > 1 then
-            for _ = 1, argc-2 do pop() end
-            local vv, vt = pop()
-            local nv, _ = pop()
-            vars[nv] = vv
-            varTypes[nv] = vt
-        else
-            for _ = 1, argc do pop() end
-        end
-        pop()
-    end,
-
-    get = function(argc)                    -- get global var
-        for _ = 1, argc-1 do pop() end
-        if argc > 0 then
-            local nv, _ = pop()
-            pop()
-            if varTypes[nv] and vars[nv] then
-                push(varTypes[nv], vars[nv])
-            end
-        end
-    end,
-
-    func = function(argc)                   -- = "main (params) {block}"
-        for _ = 1, argc-3 do pop() end
-        local fBlock, bt = pop()
-        if bt == vm.types.block then
-            local argList, argListTypes   -- { values }, { types }
-            if argc == 3 then
-                argList, argListTypes = pop()
-                for _, t in ipairs(argListTypes) do
-                    if t ~= vm.types.name then
-                        print("smth 1") -- rise exeption here
-                    end
-                end
-            end
-            local name, nameT = pop()
-            if nameT == vm.types.name then
-                print("yieepe")
-            else
-                print("smth 2") -- rise exeption here
-            end
-            pop()
-        else
-            print("smth 3") -- rise exeption here
-            pop()
-        end
-    end,
-
-    pop = function(argc)                    -- pop number of indeces from stack
-        for _ = 1, argc-1 do pop() end
-        local value = 1
-        if argc > 0 then value = pop() end
-        pop()
-        for _ = 1, value do pop() end
-    end,
-
-    swap = function(argc)                   -- swap 2 indeces places number of indeces back
-        for _ = 1, argc-1 do pop() end
-        local howBack = 0
-        if argc > 0 then
-            howBack = pop()
-        end
-        pop()
-        local a, at = {}, {}
-        for _ = 1, howBack do
-            local b, bt = pop()
-            table.insert(a, b)
-            table.insert(at, bt)
-        end
-        swap()
-        for _ = 1, howBack do
-            push(table.remove(at), table.remove(a))
-        end
-    end,
-
-    copy = function(argc)                   -- copy many stack indeces number of times
-        local a, at = {}, {}
-        for _ = 1, argc-1 do
-            local b, bt = pop()
-            table.insert(a, b)
-            table.insert(at, bt)
-        end
-        local howMuch = 1
-        if argc > 0 then
-            howMuch = pop()
-        end
-        pop()
-        for _ = 1, howMuch + 1 do
-            for j = 1, argc-1 do
-                push(at[#at-j+1], a[#a-j+1])
-            end
-        end
-    end,
-
-    print = function(argc)                  -- print and pop out stack indeces
-        local str = ""
-        for _ = 1, argc do
-            str = ' ' .. pop() .. str
-        end
-        pop()
-        print(string.sub(str, 2))
-    end,
-
-    type = function(argc)                   -- return value from typeStack
-        local str = ""
-        for _ = 1, argc do
-            local _, t = pop()
-            str = ' ' .. t .. str
-        end
-        pop()
-        push(vm.types.string, string.sub(str, 2))
-    end,
-
-    printtype = function(argc)                   -- return value from typeStack
-        local str = ""
-        for _ = 1, argc do
-            local _, t = pop()
-            str = ' ' .. t .. str
-        end
-        pop()
-        print(string.sub(str, 2))
-    end,
-
-    list = function(argc)                   -- original list function
-        local a, at = {}, {}
-        for _ = 1, argc do
-            local b, bt = pop()
-            table.insert(a, 1, b)
-            table.insert(at, 1, bt)
-        end
-        pop()
-        pushList(vm.types.list, { s = argc, v = a, t = at })
-    end,
-
-    stringify = function(argc)              -- changes indeces typeStack value to one of vm.types.string if posible
-        local a, at = {}, {}
-        for _ = 1, argc do
-            local b, bt = pop()
-            table.insert(a, b)
-            table.insert(at, bt)
-        end
-        pop()
-        for _ = 1, argc do
-            local b = table.remove(at)
-            if b == vm.types.list or b == vm.types.block then
-                push(b, table.remove(a))
-            else
-                push(vm.types.string, table.remove(a))
-            end
-        end
-    end,
-
-    concat = function(argc)
-        if argc >= 1 then
-            for _ = 1, argc-2 do pop() end
-            local spacer = ""
-            if argc >= 2 then spacer = pop() end
-            local list, at = {}, nil
-            if argc >= 1 then list, at = pop() end
-            if at == vm.types.list then
-                local str = ""
-                for _, v in ipairs(list.v) do
-                    str = str .. spacer .. v
-                end
-                pop()
-                str = string.sub(str, string.len(spacer)+1 )
-                push(vm.types.string, str)
-            else
-                pop()
-            end
-        else
-            pop()
-        end
-    end,
-
-    ["do"] = function(argc)
-        local blocks = {}
-        for i = 1, argc do
-            local a, at = pop()
-            if at == vm.types.block then
-                blocks[i] = a
-            end
-        end
-        pop()
-        for i = 1, #blocks do
-            local j = #blocks-i+1
-            -- print(j, blocks[j], (blocks[j].v) and #blocks[j].v or 0)   print(table.concat(blocks[j].v, ' '))
-            vm_(blocks[j])
-        end
-    end,
-
-    randseed = function(argc) for _ = 1, argc-1 do pop() end
-        local a, at
-        if argc == 1 then
-            a, at = pop()
-        end
-        pop()
-        if at ~= vm.types.number then
-            a = nil
-        end
-        math.randomseed(a)
-    end,
-
-    rand = function(argc) if argc >= 2 then   for _ = 1, argc-2 do pop() end
-        local a, at = pop()
-        local b, bt = pop()
-        pop()
-        if at == vm.types.number and bt == vm.types.number then
-            push(vm.types.number, math.random(b, a))
-        end
-    elseif argc == 1 then
-        local a, at = pop()
-        pop()
-        if at == vm.types.number then
-            push(vm.types.number, math.random(a))
-        end
-    else
-        pop()
-        push(vm.types.number, math.random())
-    end end,
-
-    -- if, while, for, fori
-}
+dofile("src/vm/funcs.lua")
 
 
 -- support for args (converted to llpl list and shiped to vm) :smile:
 if
 false
-then                    -- toglle if to pack lua arg to llpl (pl name)
+then
     local args_list = { s = #arg-1, t={}, v={} }
     for i = 2, #arg do
         args_list.t[i-1] = vm.types.string
@@ -623,8 +224,22 @@ then                    -- toglle if to pack lua arg to llpl (pl name)
     vars["args"] = args_list
 end
 
+
+-- vm info printing point func
+function vmInfoPoint()
+    print("VM uptime:", ((os.clock() - clocktok)*1000).."ms")
+
+    printLocVars()
+
+    printVars()
+    printStack()
+end
+
+
 -- ohh heres the big boi :smiley:
-function vm_(block)
+function vm_(block, locVars, locVarTypes)
+    table.insert(vmStack, { vars = locVars, varTypes = locVarTypes })
+    printLocVars()
     local block_checking = 0
     local i = 0
     while i < #block.v do
@@ -639,37 +254,29 @@ function vm_(block)
 
                 if value == '(' then
                     goInLocalSpace()
-                    -- a(i)
                 elseif value == ')' then
-                    -- a(i)
                     local begin = localSpaceEnterPosStack[#localSpaceEnterPosStack] or 0
                     local argc = #stack - begin       -- end - begin = difference
-
-                    -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
 
                     if argc > 0 then
 
                         if typeStack[begin+1] == vm.types.name then
                             local funcName = stack[begin+1]
-                            if luaFunctions[funcName] then
+                            if functions[funcName] then
                                 -- print(funcName, argc-1)
-                                luaFunctions[funcName](argc-1)
+                                -- printStack()
+                                local result = functions[funcName](argc-1)
+                                if result == false then
+                                    for _ = 1, argc do pop() end
+                                    -- cause/throw Exception maybe or smth idk 3
+                                end
+
                             else
+                                -- cause/throw Exception maybe or smth idk
                                 print("error: lua funcion \""..funcName.."\" was not found!")
                             end
-
-                        -- else
-                        --     local a, at = {}, {}
-                        --     for _ = 1, argc do
-                        --         local b, bt = pop()
-                        --         table.insert(a, 1, b)
-                        --         table.insert(at, 1, bt)
-                        --     end
-                        --     pushList(vm.types.list, { s = argc, v = a, t = at })
-                        
-                        -- (nwm co z tym zrobic btw)
-
                         end
+
                     end
 
                     goOutLocalSpace()
@@ -678,26 +285,24 @@ function vm_(block)
 
                 elseif value == '[' then
                     goInOperSpace()
-                    -- a(i)
                 elseif value == ']' then
-                    -- a(i)
                     local begin = operationSpaceEnterPosStack[#operationSpaceEnterPosStack] or 0
                     local argc = #stack - begin       -- end - begin = difference
-
-                    -- print(' C'..(" "):rep(#localSpaceEnterPosStack*2-1).. argc)
 
                     if argc > 0 then
 
                         if typeStack[#typeStack] == vm.types.operator then
                             local oper = stack[#stack]
                             pop()
-                            if luaOperations[oper] then
+                            if operations[oper] then
                                 -- print(oper, argc-1)
-                                luaOperations[oper](argc-1)
+                                operations[oper](argc-1)
                             else
+                                -- cause/throw Exception maybe or smth idk 2
                                 print("error: lua operation \""..oper.."\" was not found!")
                             end
                         else
+                            -- cheacky list operatio
                             local a, at = {}, {}
                             for _ = 1, argc do
                                 local b, bt = pop()
@@ -708,6 +313,7 @@ function vm_(block)
                         end
                     else
                         --     coped from above ^^^
+                        -- cheacky list operatio 2
                         local a, at = {}, {}
                         for _ = 1, argc do
                             local b, bt = pop()
@@ -768,6 +374,8 @@ function vm_(block)
         end
         :: vm_next ::
     end
+    printLocVars()
+    table.remove(vmStack)
 end
 
 
@@ -798,63 +406,34 @@ xpcall(
     function(msg)
         print("lua: "..tostring(msg))
     end,
-    { v = toks, t = tokTypes }
+    { v = toks, t = tokTypes },
+    {}, {}
 )
 
 local clockvm = os.clock()
 
 
 -- Debug
-local llplDebugFlag = true
+local llplDebug_Flag  = true
+local llplDebug_Vars  = true
+local llplDebug_stack = true
+local llplDebug_ShowTime = true
 
-if llplDebugFlag then
-    -- debug start
-    function printBlock(block, indent)
-        print(indent.."size: "..tostring(block.s or math.max(#block.v, #block.t)))
-        -- for j = 1, (block.s or math.max(#block.v, #block.t)) do
-            print(table.concat(block.v, ' '))
-            -- if block.t[j] == vm.types.block then
-            --     printBlock(block.v[j], indent.."  ")
-            -- end
-        -- end
-    end
+-- debug start
+if llplDebug_Flag and (llplDebug_Vars or llplDebug_stack) then
 
-    function printList(list, indent)
-        print(indent.."size: "..tostring(list.s or "unknown"))
-        for j = 1, (list.s or math.max(#list.v, #list.t)) do
-            print(indent..j..": \""..tostring(list.v[j]).."\": \""..tostring(list.t[j]).."\"")
-            if list.t[j] == vm.types.list then
-                printList(list.v[j], indent.."  ")
-            elseif list.t[j] == vm.types.block then
-                printBlock(list.v[j], indent.."  ")
-            end
-        end
-    end
+    print("\n(program ended) Debug:")
 
+    if llplDebug_Vars then   printVars()   end
 
-    print("\nvars (+ types):")
-    for k, v in pairs(vars) do
-        print('"'..k.."\" = \""..tostring(v).."\": \""..tostring(varTypes[k]).."\"")
-        if varTypes[k] == vm.types.list then
-            printList(v, "  ")
-        elseif varTypes[k] == vm.types.block then
-            printBlock(v, "  ")
-        end
-    end
+    if llplDebug_stack then   printStack()   end
 
-    print("\nstack (+ types):")
-    for i = 1, math.max(#stack, #typeStack) do
-        print(i..": \""..tostring(stack[i]).."\": \""..tostring(typeStack[i]).."\"")
-        if typeStack[i] == vm.types.list then
-            printList(stack[i], "  ")
-        elseif typeStack[i] == vm.types.block then
-            printBlock(stack[i], "  ")
-        end
-    end
-    -- debug end
 end
+-- debug end
 
-print("\ntime:")
-print("  tok:", (clock*1000).."ms")
--- print("  info:", ((clocktok - clock)*1000).."ms")
-print("  vm:", ((clockvm - clocktok)*1000).."ms")
+if llplDebug_ShowTime then
+    print("\ntime:")
+    print("  tok:", (clock*1000).."ms")
+    -- print("  info:", ((clocktok - clock)*1000).."ms")
+    print("  vm:", ((clockvm - clocktok)*1000).."ms")
+end
