@@ -2,12 +2,6 @@
 
 /// next thing to do "string" YESS SIRRr
 /// also unlist (list -> stack) where list (stack -> list) yes sir :D
-/// and then next thing to do {blocks} PL_DEV_POG :\/
-
-
-/// ([math max .] 2 3) (pop 4) /// <- removes prevous atempt from stack
-/// equal to ^ (in lua)
-/// math.max(2, 3)
 
 
 /// {
@@ -24,4 +18,4 @@
 (do (get a))
 (do (get a))
 
-/// (print (concat (get args) (get space) ) )
+/// (print (concat (get args) (get SPACE) ) )

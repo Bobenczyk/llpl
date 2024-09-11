@@ -205,3 +205,15 @@ functions["lua_string_lower"] = function(argc)   if argc >= 1 then
         push(vm.types.string, table.remove(a))
     end
 else   for _ = 1, argc+1, 1 do pop() end   end end
+
+
+
+--- some other funcs ---
+functions["wait"] = function(argc)if argc >= 1 then
+    local a, at = pop()
+    pop()
+    if at == vm.types.number then
+        local e = os.clock()+tostring(a)
+        repeat until e <= os.clock()
+    end
+else  pop()  end end

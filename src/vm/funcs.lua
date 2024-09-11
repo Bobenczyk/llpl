@@ -42,17 +42,19 @@ functions = {
 
     set = function(argc)                    -- set local var
         local vmStackLen = #vmStack
-        print("SET "..vmStackLen)
+        -- print("SET "..vmStackLen)
         if vmStackLen > 0 then
             if argc > 1 then
                 for _ = 1, argc-2 do pop() end
                 local vv, vt = pop()
                 local nv, _ = pop()
-                print(vv)
+                -- print(vv)
                 vmStack[vmStackLen].vars[nv] = vv
                 vmStack[vmStackLen].varTypes[nv] = vt
             elseif argc == 1 then
-                pop()
+                local nv, _ = pop()
+                vmStack[vmStackLen].vars[nv] = nil
+                vmStack[vmStackLen].varTypes[nv] = nil
             end
             pop()
         else
@@ -60,7 +62,7 @@ functions = {
         end
     end,
 
-    get = function(argc)                    -- get global var if exists in global space if not then get local var
+    get = function(argc)                    -- get local var if exists else get local var
         for _ = 1, argc-1 do pop() end
         if argc > 0 then
             local nv, _ = pop()
@@ -68,10 +70,17 @@ functions = {
             local at, a
             local vmStackLen = #vmStack
             if vmStackLen > 0 then
-                at, a = vmStack[vmStackLen].varTypes[nv], vmStack[vmStackLen].vars[nv]
-            else
+                for i = vmStackLen, 1, -1 do
+                    at, a = vmStack[i].varTypes[nv], vmStack[i].vars[nv]
+                    if at then
+                        goto b
+                    end
+                end
+            end
+            if vmStackLen == 0 or not at then
                 at, a = varTypes[nv], vars[nv]
             end
+            ::b::
             if a and at then
                 push(at, a)
             end
@@ -243,8 +252,8 @@ functions = {
         for i = 1, #blocks do
             local j = #blocks-i+1
             -- print(j, blocks[j], (blocks[j].v) and #blocks[j].v or 0)   print(table.concat(blocks[j].v, ' '))
-            local at, a = (vmStack[#vmStack].varTypes or {}), (vmStack[#vmStack].vars or {})
-            vm_(blocks[j], a, at)
+            -- local at, a = (vmStack[#vmStack].varTypes or {}), (vmStack[#vmStack].vars or {})
+            vm_(blocks[j])
         end
     end,
 

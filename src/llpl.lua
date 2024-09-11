@@ -1,3 +1,5 @@
+local clock = os.clock()
+
 -- get entry file directory path as global Path
 Path = (arg[0]:match(".+[\\/]") or ""):sub(1, -2):match(".+[\\/]") or ""
 
@@ -123,7 +125,7 @@ while i < string.len(code) do
 end
 token(analize(buf), buf)
 
-local clock = os.clock()
+
 -- print(("---"):rep(14)..'\n'..("   "):rep(5).."vm time!\n"..("---"):rep(14))
 local clocktok = os.clock()
 -- virtual machine --
@@ -237,9 +239,9 @@ end
 
 
 -- ohh heres the big boi :smiley:
-function vm_(block, locVars, locVarTypes)
-    table.insert(vmStack, { vars = locVars, varTypes = locVarTypes })
-    printLocVars()
+function vm_(block)
+    table.insert(vmStack, { vars = {}, varTypes = {} })
+    -- printLocVars()
     local block_checking = 0
     local i = 0
     while i < #block.v do
@@ -374,7 +376,7 @@ function vm_(block, locVars, locVarTypes)
         end
         :: vm_next ::
     end
-    printLocVars()
+    -- printLocVars()
     table.remove(vmStack)
 end
 
@@ -401,20 +403,18 @@ for i, tok in ipairs(tokens) do
     toks[i] = tok.value
     tokTypes[i] = tok.type
 end
+local clockvmstart = os.clock()
 xpcall(
     vm_,
     function(msg)
-        print("lua: "..tostring(msg))
+        print("llpl: "..tostring(msg))
     end,
-    { v = toks, t = tokTypes },
-    {}, {}
+    { v = toks, t = tokTypes }
 )
-
-local clockvm = os.clock()
-
+local clockvmend = os.clock()
 
 -- Debug
-local llplDebug_Flag  = true
+local llplDebug_Flag  = false
 local llplDebug_Vars  = true
 local llplDebug_stack = true
 local llplDebug_ShowTime = true
@@ -433,7 +433,8 @@ end
 
 if llplDebug_ShowTime then
     print("\ntime:")
-    print("  tok:", (clock*1000).."ms")
+    print("  tok:", (clocktok*1000).."ms")
     -- print("  info:", ((clocktok - clock)*1000).."ms")
-    print("  vm:", ((clockvm - clocktok)*1000).."ms")
+    print("  vm :", ((clockvmend - clockvmstart)*1000).."ms")
+    print("  all:", ((clockvmend - clock)*1000).."ms")
 end

@@ -74,6 +74,35 @@ operations = {
     end,
 
 
+    ["++"] = function(argc)                  -- incriment
+        local sum = 0
+        for _ = 1, argc do
+            sum = sum + pop()
+        end
+
+        push(vm.types.number, tostring(sum+1))
+    end,
+    ["--"] = function(argc)                  -- minus
+        local sum = 0
+        if argc > 1 then
+            local a = {}
+            for _ = 1, argc do
+                local b, _ = pop()
+                table.insert(a, b)
+            end
+            sum = a[#a]
+            for i = argc-1, 1, -1 do
+                sum = sum - a[i]
+            end
+        elseif argc == 1 then
+            local a, _ = pop()
+            sum = -a
+        end
+
+        push(vm.types.number, tostring(sum-1))
+    end,
+
+
     ["#"] = function(argc)                  -- lenght operator (gets lenght of: strings, lists, etc...)
     end,
 
